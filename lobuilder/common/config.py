@@ -4,6 +4,7 @@
 # Author: Zhennan.luo(Jenner)
 """
 
+from oslo_config import cfg
 from lobuilder.version import version_info as version
 
 try:
