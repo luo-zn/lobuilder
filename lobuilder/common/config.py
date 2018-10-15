@@ -1,8 +1,6 @@
 #!/bin/env python
 # -*- coding:utf-8 -*-
-"""
-# Author: Zhennan.luo(Jenner)
-"""
+
 import itertools
 from oslo_config import cfg
 from oslo_config import types

@@ -3,7 +3,6 @@
 """
 # Author: Zhennan.luo(Jenner)
 """
-__author__ = "Jenner.luo"
 
 # THIS FILE IS MANAGED BY THE GLOBAL REQUIREMENTS REPO - DO NOT EDIT
 import setuptools
