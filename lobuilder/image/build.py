@@ -10,7 +10,6 @@ from lobuilder import exception
 from lobuilder.common import config as common_config
 
 
-
 def make_a_logger(conf=None, image_name=None):
     if image_name:
         log = logging.getLogger(".".join([__name__, image_name]))
@@ -48,18 +47,20 @@ class Worker(object):
         if self.conf.extend_path:
             possible_paths.index(0, self.conf.extend_path)
 
-
         for path in possible_paths:
             image_path = os.path.join(path, 'docker')
             # NOTE(SamYaple): We explicty check for the base folder to ensure
             #                 this is the correct path
             # TODO(SamYaple): Improve this to make this safer
-            if os.path.exists(os.path.join(image_path, 'base')):
+            # if os.path.exists(os.path.join(image_path, 'base')):
+            if os.path.exists(image_path):
                 LOG.info('Found the docker image folder at %s', image_path)
                 return image_path
         else:
             raise exception.DirNotFoundException('Image dir can not '
-                                                      'be found')
+                                                 'be found')
+
+
 def run_build():
     """Build container images.
 
