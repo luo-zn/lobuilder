@@ -1,8 +1,5 @@
 #!/bin/env python
 # -*- coding:utf-8 -*-
-"""
-# Author: Zhennan.luo(Jenner)
-"""
 from __future__ import print_function
 
 import os
