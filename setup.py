@@ -1,8 +1,5 @@
 #!/bin/env python
 # -*- coding:utf-8 -*-
-"""
-# Author: Zhennan.luo(Jenner)
-"""
 
 # THIS FILE IS MANAGED BY THE GLOBAL REQUIREMENTS REPO - DO NOT EDIT
 import setuptools
