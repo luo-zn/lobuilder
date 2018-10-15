@@ -3,8 +3,9 @@
 """
 # Author: Zhennan.luo(Jenner)
 """
-
+import itertools
 from oslo_config import cfg
+from oslo_config import types
 from lobuilder.version import version_info as version
 
 try:
