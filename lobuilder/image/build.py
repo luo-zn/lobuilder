@@ -5,7 +5,6 @@
 """
 from __future__ import print_function
 
-__author__ = "Jenner.luo"
 import logging
 from oslo_config import cfg
 from lobuilder.common import config as common_config

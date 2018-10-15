@@ -3,7 +3,6 @@
 """
 # Author: Zhennan.luo(Jenner)
 """
-__author__ = "Jenner.luo"
 
 import os
 import sys

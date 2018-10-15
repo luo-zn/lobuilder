@@ -3,7 +3,6 @@
 """
 # Author: Zhennan.luo(Jenner)
 """
-__author__ = "Jenner.luo"
 
 from lobuilder.version import version_info as version
 
