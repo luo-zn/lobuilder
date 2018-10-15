@@ -5,8 +5,8 @@
 """
 from __future__ import print_function
 
-import sys
 import os
+import sys
 import logging
 from oslo_config import cfg
 from lobuilder.common import config as common_config

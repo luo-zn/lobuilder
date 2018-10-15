@@ -165,7 +165,8 @@ except Exception as e:
         cfg.MultiOpt('profile', types.String(), short='p',
                      help=('Build a pre-defined set of images, see [profiles]'
                            ' section in config. The default profiles are:'
-                           ' {}'.format(', '.join([opt.name for opt in _PROFILE_OPTS])))),
+                           ' {}'.format(
+                         ', '.join([opt.name for opt in _PROFILE_OPTS])))),
         cfg.BoolOpt('push', default=False,
                     help='Push images after building'),
         cfg.IntOpt('push-threads', default=1, min=1,
