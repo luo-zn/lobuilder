@@ -4,6 +4,7 @@
 # Created By: Zhennan.luo(Jenner)
 """
 import os
+import mock
 import fixtures
 import itertools
 from lobuilder.tests import base
@@ -104,3 +105,12 @@ class WorkerTest(base.TestCase):
                 break
         else:
             self.fail('Expected to find the base image in this test')
+
+    @mock.patch('pprint.pprint')
+    def test_list_dependencies(self, pprint_mock):
+        self.conf.set_override('profile', ['all'])
+        wk = build.Worker(self.conf)
+        wk.images = self.images
+        wk.filter_images()
+        wk.list_dependencies()
+        pprint_mock.assert_called_once_with(mock.ANY)

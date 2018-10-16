@@ -5,6 +5,7 @@ from __future__ import print_function
 import datetime
 import logging
 import os
+import pprint
 import re
 import sys
 import six
@@ -397,6 +398,106 @@ class Worker(object):
                         process_source_installation(image, plugin))
             self.images.append(image)
 
+    def find_parents(self):
+        """Associate all images with parents and children"""
+        sort_images = dict()
+
+        for image in self.images:
+            sort_images[image.canonical_name] = image
+
+        for parent_name, parent in sort_images.items():
+            for image in sort_images.values():
+                if image.parent_name == parent_name:
+                    parent.children.append(image)
+                    image.parent = parent
+
+    def filter_images(self):
+        """Filter which images to build"""
+        filter_ = list()
+
+        if self.regex:
+            filter_ += self.regex
+        elif self.conf.profile:
+            for profile in self.conf.profile:
+                if profile not in self.conf.profiles:
+                    self.conf.register_opt(cfg.ListOpt(profile,
+                                                       default=[]),
+                                           'profiles')
+                if len(self.conf.profiles[profile]) == 0:
+                    msg = 'Profile: {} does not exist'.format(profile)
+                    raise ValueError(msg)
+                else:
+                    filter_ += self.conf.profiles[profile]
+
+        if filter_:
+            patterns = re.compile(r"|".join(filter_).join('()'))
+            for image in self.images:
+                if image.status == STATUS_MATCHED:
+                    continue
+                if re.search(patterns, image.name):
+                    image.status = STATUS_MATCHED
+                    while (image.parent is not None and
+                                   image.parent.status != STATUS_MATCHED):
+                        image = image.parent
+                        image.status = STATUS_MATCHED
+                        LOG.debug('Image %s matched regex', image.name)
+                else:
+                    image.status = STATUS_UNMATCHED
+        else:
+            for image in self.images:
+                image.status = STATUS_MATCHED
+
+    def save_dependency(self, to_file):
+        try:
+            import graphviz
+        except ImportError:
+            LOG.error('"graphviz" is required for save dependency')
+            raise
+        dot = graphviz.Digraph(comment='Docker Images Dependency')
+        dot.body.extend(['rankdir=LR'])
+        for image in self.images:
+            if image.status not in [STATUS_MATCHED]:
+                continue
+            dot.node(image.name)
+            if image.parent is not None:
+                dot.edge(image.parent.name, image.name)
+
+        with open(to_file, 'w') as f:
+            f.write(dot.source)
+
+    def list_images(self):
+        for count, image in enumerate([image for image in self.images if
+                                       image.status == STATUS_MATCHED]):
+            print(count + 1, ':', image.name)
+
+    def list_dependencies(self):
+        match = False
+        for image in self.images:
+            if image.status in [STATUS_MATCHED]:
+                match = True
+            if image.parent is None:
+                base = image
+
+        if not match:
+            print('Nothing matched!')
+            return
+
+        def list_children(images, ancestry):
+            children = six.next(iter(ancestry.values()))
+            for image in images:
+                if image.status not in [STATUS_MATCHED]:
+                    continue
+                if not image.children:
+                    children.append(image.name)
+                else:
+                    newparent = {image.name: []}
+                    children.append(newparent)
+                    list_children(image.children, newparent)
+
+        ancestry = {base.name: []}
+        list_children(base.children, ancestry)
+        pprint.pprint(ancestry)
+
 
 def run_build():
     """Build container images.
@@ -424,3 +525,21 @@ def run_build():
 
     if conf.save_dependency:
         wk.build_image_list()
+        wk.find_parents()
+        wk.filter_images()
+        wk.save_dependency(conf.save_dependency)
+        LOG.info('Docker images dependency are saved in %s',
+                 conf.save_dependency)
+        return
+    if conf.list_images:
+        wk.build_image_list()
+        wk.find_parents()
+        wk.filter_images()
+        wk.list_images()
+        return
+    if conf.list_dependencies:
+        wk.build_image_list()
+        wk.find_parents()
+        wk.filter_images()
+        wk.list_dependencies()
+        return
