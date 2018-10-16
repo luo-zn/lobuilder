@@ -204,12 +204,14 @@ class Worker(object):
 
     def extend_docker_path(self, working_dir):
         edp = self.conf.extend_docker_path
+        import pdb;
+        pdb.set_trace()
         if edp and os.path.exists(edp):
             for name in os.listdir(edp):
                 image_dir = os.path.join(working_dir, name)
                 if os.path.exists(image_dir):
                     shutil.rmtree(image_dir)
-                shutil.copyfile(os.path.join(edp, name), working_dir)
+                shutil.copytree(os.path.join(edp, name), working_dir)
 
     def setup_working_dir(self):
         """Creates a working directory for use while building"""
