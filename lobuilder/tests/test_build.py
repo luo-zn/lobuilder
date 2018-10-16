@@ -29,6 +29,29 @@ class TasksTest(base.TestCase):
         mock_client().push.assert_called_once_with(
             self.image.canonical_name, stream=True, insecure_registry=True)
 
+    @mock.patch('docker.version', '3.0.0')
+    @mock.patch.dict(os.environ, clear=True)
+    @mock.patch('docker.Client')
+    def test_push_image(self, mock_client):
+        pusher = build.PushTask(self.conf, self.image)
+        pusher.run()
+        mock_client().push.assert_called_once_with(
+            self.image.canonical_name, stream=True)
+
+    @mock.patch.dict(os.environ, clear=True)
+    @mock.patch('docker.Client')
+    def test_build_image(self, mock_client):
+        push_queue = mock.Mock()
+        builder = build.BuildTask(self.conf, self.image, push_queue)
+        builder.run()
+
+        mock_client().build.assert_called_once_with(
+            path=self.image.path, tag=self.image.canonical_name,
+            nocache=False, rm=True, pull=True, forcerm=True,
+            buildargs=None)
+
+        self.assertTrue(builder.success)
+
 
 class WorkerTest(base.TestCase):
     config_file = 'default.conf'
