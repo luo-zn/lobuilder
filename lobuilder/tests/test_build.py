@@ -6,6 +6,7 @@
 import fixtures
 import itertools
 from lobuilder.tests import base
+from lobuilder import exception
 from lobuilder.image import build
 
 FAKE_IMAGE = build.Image(
@@ -42,3 +43,11 @@ class WorkerTest(base.TestCase):
             self.conf.set_override('install_type', install_type)
             # should no exception raised
             build.Worker(self.conf)
+
+    def test_unsupported_base_type(self):
+        for base_distro, install_type in itertools.product(
+                ['ubuntu', 'debian'], ['rdo', 'rhos']):
+            self.conf.set_override('base', base_distro)
+            self.conf.set_override('install_type', install_type)
+            self.assertRaises(exception.MismatchBaseTypeException,
+                              build.Worker, self.conf)
