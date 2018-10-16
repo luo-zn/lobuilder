@@ -53,7 +53,7 @@ class WorkerTest(base.TestCase):
 
     def test_extend_docker_path(self):
         fake_extend_path = os.path.abspath(os.path.join(
-            os.path.dirname(os.path.realpath(__file__)), 'fakes'))
+            os.path.dirname(os.path.realpath(__file__)), 'fakes','docker'))
         self.conf.set_default("extend_docker_path", fake_extend_path)
         wk = build.Worker(self.conf)
 
