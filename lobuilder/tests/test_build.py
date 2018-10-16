@@ -3,6 +3,7 @@
 """
 # Created By: Zhennan.luo(Jenner)
 """
+import os
 import fixtures
 import itertools
 from lobuilder.tests import base
