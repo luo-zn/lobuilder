@@ -4,6 +4,7 @@
 # Created By: Zhennan.luo(Jenner)
 """
 import os
+import mock
 import fixtures
 from oslo_config import cfg
 from oslotest import base as oslotest_base
