@@ -16,6 +16,7 @@ import time
 import tarfile
 import threading
 import tempfile
+import json
 import jinja2
 import git
 from oslo_config import cfg
@@ -835,6 +836,77 @@ class Worker(object):
 
         return queue
 
+    def get_image_statuses(self):
+        if any([self.image_statuses_bad,
+                self.image_statuses_good,
+                self.image_statuses_unmatched]):
+            return (self.image_statuses_bad,
+                    self.image_statuses_good,
+                    self.image_statuses_unmatched)
+        for image in self.images:
+            if image.status == STATUS_BUILT:
+                self.image_statuses_good[image.name] = image.status
+            elif image.status == STATUS_UNMATCHED:
+                self.image_statuses_unmatched[image.name] = image.status
+            else:
+                self.image_statuses_bad[image.name] = image.status
+        return (self.image_statuses_bad,
+                self.image_statuses_good,
+                self.image_statuses_unmatched)
+
+    def summary(self):
+        """Walk the dictionary of images statuses and print results"""
+        # For debug we print the logs again if the image error'd. This is to
+        # help us debug and it will be extra helpful in the gate.
+        for image in self.images:
+            if image.status in STATUS_ERRORS:
+                LOG.debug("Image %s failed", image.name)
+        self.get_image_statuses()
+        results = {
+            'built': [],
+            'failed': [],
+            'not_matched': [],
+        }
+
+        if self.image_statuses_good:
+            LOG.info("=========================")
+            LOG.info("Successfully built images")
+            LOG.info("=========================")
+            for name in self.image_statuses_good.keys():
+                LOG.info(name)
+                results['built'].append({
+                    'name': name,
+                })
+        if self.image_statuses_bad:
+            LOG.info("===========================")
+            LOG.info("Images that failed to build")
+            LOG.info("===========================")
+            for name, status in self.image_statuses_bad.items():
+                LOG.error('%s Failed with status: %s', name, status)
+                results['failed'].append({
+                    'name': name,
+                    'status': status,
+                })
+                if self.conf.logs_dir and status == STATUS_ERROR:
+                    os.symlink("%s.log" % name,
+                               os.path.join(self.conf.logs_dir,
+                                            "000_FAILED_%s.log" % name))
+        if self.image_statuses_unmatched:
+            LOG.debug("=====================================")
+            LOG.debug("Images not matched for build by regex")
+            LOG.debug("=====================================")
+            for name in self.image_statuses_unmatched.keys():
+                LOG.debug(name)
+                results['not_matched'].append({
+                    'name': name,
+                })
+
+        return results
+
+    def cleanup(self):
+        """Remove temp files"""
+        shutil.rmtree(self.temp_dir)
+
 
 class WorkerThread(threading.Thread):
     """Thread that executes tasks until the queue provides a tombstone."""
@@ -959,3 +1031,9 @@ def run_build():
             push_queue.put(WorkerThread.tombstone)
             queue.put(WorkerThread.tombstone)
             raise
+
+    results = wk.summary()
+    wk.cleanup()
+    if conf.format == 'json':
+        print(json.dumps(results))
+    return wk.get_image_statuses()
