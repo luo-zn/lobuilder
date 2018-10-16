@@ -155,6 +155,15 @@ class Worker(object):
                 os.path.join(self.working_dir, "base", "apt_preferences")
             )
 
+    def extend_docker_path(self, working_dir):
+        edp = self.conf.extend_docker_path
+        if edp and os.path.exists(edp):
+            for name in os.listdir(edp):
+                image_dir = os.path.join(working_dir, name)
+                if os.path.exists(image_dir):
+                    shutil.rmtree(image_dir)
+                shutil.copyfile(os.path.join(edp, name), working_dir)
+
     def setup_working_dir(self):
         """Creates a working directory for use while building"""
         ts = time.time()
@@ -162,6 +171,7 @@ class Worker(object):
         self.temp_dir = tempfile.mkdtemp(prefix='lobuilder-' + ts)
         self.working_dir = os.path.join(self.temp_dir, 'docker')
         shutil.copytree(self.images_dir, self.working_dir)
+        self.extend_docker_path(self.working_dir)
         self.copy_apt_files()
         LOG.debug('Created working dir: %s', self.working_dir)
 
