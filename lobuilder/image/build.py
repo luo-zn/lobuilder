@@ -204,8 +204,6 @@ class Worker(object):
 
     def extend_docker_path(self, working_dir):
         edp = self.conf.extend_docker_path
-        import pdb;
-        pdb.set_trace()
         if edp and os.path.exists(edp):
             for name in os.listdir(edp):
                 src_dir = os.path.join(edp, name)

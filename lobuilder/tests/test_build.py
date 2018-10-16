@@ -56,5 +56,7 @@ class WorkerTest(base.TestCase):
             os.path.dirname(os.path.realpath(__file__)), 'fakes','docker'))
         self.conf.set_default("extend_docker_path", fake_extend_path)
         wk = build.Worker(self.conf)
-
         wk.setup_working_dir()
+        images_dir = os.listdir(wk.working_dir)
+        for item in os.listdir(fake_extend_path):
+            self.assertIn(item, images_dir)
