@@ -5,6 +5,7 @@ from __future__ import print_function
 import datetime
 import logging
 import os
+import re
 import sys
 import six
 import shutil
