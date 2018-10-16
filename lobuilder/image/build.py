@@ -212,7 +212,7 @@ class Worker(object):
                 if os.path.isdir(image_dir):
                     if os.path.exists(image_dir):
                         shutil.rmtree(image_dir)
-                    shutil.copytree(os.path.join(edp, name), working_dir)
+                    shutil.copytree(os.path.join(edp, name), image_dir)
 
     def setup_working_dir(self):
         """Creates a working directory for use while building"""
