@@ -56,5 +56,10 @@ class WorkerTest(base.TestCase):
         """checking the length of list of docker commands"""
         self.conf.set_override('rpm_setup_config', ["a.rpm", "b.repo"])
         wk = build.Worker(self.conf)
-        print wk.rpm_setup
         self.assertEqual(2, len(wk.rpm_setup))
+
+    def test_extend_docker_path(self):
+        self.conf.set_override("extend_docker_path", "/fake/extend_path")
+        wk = build.Worker(self.conf)
+        import pdb;pdb.set_trace()
+        wk.setup_working_dir()
