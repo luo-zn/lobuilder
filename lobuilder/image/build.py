@@ -1,7 +1,7 @@
 #!/bin/env python
 # -*- coding:utf-8 -*-
 from __future__ import print_function
-
+import contextlib
 import datetime
 import docker
 import logging
@@ -14,6 +14,7 @@ import six
 import shutil
 import time
 import tarfile
+import threading
 import tempfile
 import jinja2
 import git
@@ -63,6 +64,27 @@ STATUS_UNPROCESSED = 'unprocessed'
 # All error status constants.
 STATUS_ERRORS = (STATUS_CONNECTION_ERROR, STATUS_PUSH_ERROR,
                  STATUS_ERROR, STATUS_PARENT_ERROR)
+
+
+@contextlib.contextmanager
+def join_many(threads):
+    try:
+        yield
+        for t in threads:
+            t.join()
+    except KeyboardInterrupt:
+        try:
+            LOG.info('Waiting for daemon threads exit. Push Ctrl + c again to'
+                     ' force exit')
+            for t in threads:
+                if t.is_alive():
+                    LOG.debug('Waiting thread %s to exit', t.name)
+                    # NOTE(Jeffrey4l): Python Bug: When join without timeout,
+                    # KeyboardInterrupt is never sent.
+                    t.join(0xffff)
+                LOG.debug('Thread %s exits', t.name)
+        except KeyboardInterrupt:
+            LOG.warning('Force exits')
 
 
 class Image(object):
@@ -184,6 +206,7 @@ class PushTask(DockerTask):
             elif 'errorDetail' in stream:
                 image.status = STATUS_ERROR
                 self.logger.error(stream['errorDetail']['message'])
+
 
 class BuildTask(DockerTask):
     """Task that builds out an image."""
@@ -813,6 +836,53 @@ class Worker(object):
         return queue
 
 
+class WorkerThread(threading.Thread):
+    """Thread that executes tasks until the queue provides a tombstone."""
+
+    #: Object to be put on worker queues to get them to die.
+    tombstone = object()
+
+    def __init__(self, conf, queue):
+        super(WorkerThread, self).__init__()
+        self.queue = queue
+        self.conf = conf
+        self.should_stop = False
+
+    def run(self):
+        while not self.should_stop:
+            task = self.queue.get()
+            if task is self.tombstone:
+                # Ensure any other threads also get the tombstone.
+                self.queue.put(task)
+                break
+            try:
+                for attempt in six.moves.range(self.conf.retries + 1):
+                    if self.should_stop:
+                        break
+                    if attempt > 0:
+                        LOG.info("Attempting to run task %s for the %s time",
+                                 task.name, attempt + 1)
+                    else:
+                        LOG.info("Attempting to run task %s for the first"
+                                 " time", task.name)
+                    try:
+                        task.run()
+                        if task.success:
+                            break
+                    except Exception:
+                        LOG.exception('Unhandled error when running %s',
+                                      task.name)
+                    # try again...
+                    task.reset()
+                if task.success and not self.should_stop:
+                    for next_task in task.followups:
+                        LOG.info('Added next task %s to queue',
+                                 next_task.name)
+                        self.queue.put(next_task)
+            finally:
+                self.queue.task_done()
+
+
 def run_build():
     """Build container images.
 
@@ -860,3 +930,32 @@ def run_build():
 
     push_queue = six.moves.queue.Queue()
     queue = wk.build_queue(push_queue)
+    workers = []
+
+    with join_many(workers):
+        try:
+            for x in six.moves.range(conf.threads):
+                worker = WorkerThread(conf, queue)
+                worker.setDaemon(True)
+                worker.start()
+                workers.append(worker)
+
+            for x in six.moves.range(conf.push_threads):
+                worker = WorkerThread(conf, push_queue)
+                worker.setDaemon(True)
+                worker.start()
+                workers.append(worker)
+
+            # sleep until queue is empty
+            while queue.unfinished_tasks or push_queue.unfinished_tasks:
+                time.sleep(3)
+
+            # ensure all threads exited happily
+            push_queue.put(WorkerThread.tombstone)
+            queue.put(WorkerThread.tombstone)
+        except KeyboardInterrupt:
+            for w in workers:
+                w.should_stop = True
+            push_queue.put(WorkerThread.tombstone)
+            queue.put(WorkerThread.tombstone)
+            raise
