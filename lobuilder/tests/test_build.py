@@ -11,6 +11,7 @@ import itertools
 from lobuilder.tests import base
 from lobuilder import exception
 from lobuilder.image import build
+from lobuilder.cmd import build as build_cmd
 from lobuilder.tests.fakes import FAKE_IMAGE, FAKE_IMAGE_CHILD
 
 
@@ -232,3 +233,29 @@ class WorkerTest(base.TestCase):
         wk.filter_images()
         wk.list_dependencies()
         pprint_mock.assert_called_once_with(mock.ANY)
+
+
+@mock.patch.object(build, 'run_build')
+class MainTest(base.TestCase):
+    def test_images_built(self, mock_run_build):
+        image_statuses = ({}, {'img': 'built'}, {})
+        mock_run_build.return_value = image_statuses
+        result = build_cmd.main()
+        self.assertEqual(0, result)
+
+    def test_images_unmatched(self, mock_run_build):
+        image_statuses = ({}, {}, {'img': 'unmatched'})
+        mock_run_build.return_value = image_statuses
+        result = build_cmd.main()
+        self.assertEqual(0, result)
+
+    def test_no_images_built(self, mock_run_build):
+        mock_run_build.return_value = None
+        result = build_cmd.main()
+        self.assertEqual(0, result)
+
+    def test_bad_images(self, mock_run_build):
+        image_statuses = ({'img': 'error'}, {}, {})
+        mock_run_build.return_value = image_statuses
+        result = build_cmd.main()
+        self.assertEqual(1, result)
