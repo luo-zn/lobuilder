@@ -51,3 +51,10 @@ class WorkerTest(base.TestCase):
             self.conf.set_override('install_type', install_type)
             self.assertRaises(exception.MismatchBaseTypeException,
                               build.Worker, self.conf)
+
+    def test_build_rpm_setup(self):
+        """checking the length of list of docker commands"""
+        self.conf.set_override('rpm_setup_config', ["a.rpm", "b.repo"])
+        wk = build.Worker(self.conf)
+        print wk.rpm_setup
+        self.assertEqual(2, len(kw.rpm_setup))
