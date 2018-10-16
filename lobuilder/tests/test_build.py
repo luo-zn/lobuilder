@@ -59,7 +59,7 @@ class WorkerTest(base.TestCase):
         self.assertEqual(2, len(wk.rpm_setup))
 
     def test_extend_docker_path(self):
-        self.conf.set_override("extend_docker_path", "/fake/extend_path")
+        self.conf.set_default("extend_docker_path", "/fake/extend_path")
         wk = build.Worker(self.conf)
         import pdb;pdb.set_trace()
         wk.setup_working_dir()
