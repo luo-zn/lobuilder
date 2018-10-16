@@ -52,7 +52,6 @@ class WorkerTest(base.TestCase):
         self.assertEqual(2, len(wk.rpm_setup))
 
     def test_extend_docker_path(self):
-        import pdb;pdb.set_trace()
         fake_extend_path = os.path.abspath(os.path.join(
             os.path.dirname(os.path.realpath(__file__)), 'fakes'))
         self.conf.set_default("extend_docker_path", fake_extend_path)

@@ -209,9 +209,10 @@ class Worker(object):
         if edp and os.path.exists(edp):
             for name in os.listdir(edp):
                 image_dir = os.path.join(working_dir, name)
-                if os.path.exists(image_dir):
-                    shutil.rmtree(image_dir)
-                shutil.copytree(os.path.join(edp, name), working_dir)
+                if os.path.isdir(image_dir):
+                    if os.path.exists(image_dir):
+                        shutil.rmtree(image_dir)
+                    shutil.copytree(os.path.join(edp, name), working_dir)
 
     def setup_working_dir(self):
         """Creates a working directory for use while building"""
