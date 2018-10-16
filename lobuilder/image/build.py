@@ -37,6 +37,53 @@ def make_a_logger(conf=None, image_name=None):
 
 LOG = make_a_logger()
 
+# Image status constants.
+STATUS_CONNECTION_ERROR = 'connection_error'
+STATUS_PUSH_ERROR = 'push_error'
+STATUS_ERROR = 'error'
+STATUS_PARENT_ERROR = 'parent_error'
+STATUS_BUILT = 'built'
+STATUS_BUILDING = 'building'
+STATUS_UNMATCHED = 'unmatched'
+STATUS_MATCHED = 'matched'
+STATUS_UNPROCESSED = 'unprocessed'
+
+
+class Image(object):
+    def __init__(self, name, canonical_name, path, parent_name='',
+                 status=STATUS_UNPROCESSED, parent=None,
+                 source=None, logger=None):
+        self.name = name
+        self.canonical_name = canonical_name
+        self.path = path
+        self.status = status
+        self.parent = parent
+        self.source = source
+        self.parent_name = parent_name
+        if logger is None:
+            logger = make_a_logger(image_name=name)
+        self.logger = logger
+        self.children = []
+        self.plugins = []
+
+    def copy(self):
+        c = Image(self.name, self.canonical_name, self.path,
+                  logger=self.logger, parent_name=self.parent_name,
+                  status=self.status, parent=self.parent)
+        if self.source:
+            c.source = self.source.copy()
+        if self.children:
+            c.children = list(self.children)
+        if self.plugins:
+            c.plugins = list(self.plugins)
+        return c
+
+    def __repr__(self):
+        return ("Image(%s, %s, %s, parent_name=%s,"
+                " status=%s, parent=%s, source=%s)") % (
+                   self.name, self.canonical_name, self.path,
+                   self.parent_name, self.status, self.parent, self.source)
+
 
 class Worker(object):
     def __init__(self, conf):
