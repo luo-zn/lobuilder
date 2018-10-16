@@ -57,4 +57,4 @@ class WorkerTest(base.TestCase):
         self.conf.set_override('rpm_setup_config', ["a.rpm", "b.repo"])
         wk = build.Worker(self.conf)
         print wk.rpm_setup
-        self.assertEqual(2, len(kw.rpm_setup))
+        self.assertEqual(2, len(wk.rpm_setup))
