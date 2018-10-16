@@ -3,18 +3,25 @@
 from __future__ import print_function
 
 import datetime
+import docker
 import logging
 import os
 import pprint
+import requests
 import re
 import sys
 import six
 import shutil
 import time
+import tarfile
 import tempfile
 import jinja2
+import git
 from oslo_config import cfg
+from distutils.version import StrictVersion
+from requests import exceptions as requests_exc
 from lobuilder import exception
+from lobuilder.common import task
 from lobuilder.common import config as common_config
 from lobuilder.template import filters as jinja_filters
 from lobuilder.template import methods as jinja_methods
@@ -53,6 +60,9 @@ STATUS_BUILDING = 'building'
 STATUS_UNMATCHED = 'unmatched'
 STATUS_MATCHED = 'matched'
 STATUS_UNPROCESSED = 'unprocessed'
+# All error status constants.
+STATUS_ERRORS = (STATUS_CONNECTION_ERROR, STATUS_PUSH_ERROR,
+                 STATUS_ERROR, STATUS_PARENT_ERROR)
 
 
 class Image(object):
@@ -89,6 +99,288 @@ class Image(object):
                 " status=%s, parent=%s, source=%s)") % (
                    self.name, self.canonical_name, self.path,
                    self.parent_name, self.status, self.parent, self.source)
+
+
+class DockerTask(task.Task):
+    docker_kwargs = docker.utils.kwargs_from_env()
+
+    def __init__(self):
+        super(DockerTask, self).__init__()
+        self._dc = None
+
+    @property
+    def dc(self):
+        if self._dc is not None:
+            return self._dc
+        docker_kwargs = self.docker_kwargs.copy()
+        self._dc = docker.Client(version='auto', **docker_kwargs)
+        return self._dc
+
+
+class PushIntoQueueTask(task.Task):
+    """Task that pushes some other task into a queue."""
+
+    def __init__(self, push_task, push_queue):
+        super(PushIntoQueueTask, self).__init__()
+        self.push_task = push_task
+        self.push_queue = push_queue
+
+    @property
+    def name(self):
+        return 'PushIntoQueueTask(%s=>%s)' % (self.push_task.name,
+                                              self.push_queue)
+
+    def run(self):
+        self.push_queue.put(self.push_task)
+        self.success = True
+
+
+class PushTask(DockerTask):
+    """Task that pushes an image to a docker repository."""
+
+    def __init__(self, conf, image):
+        super(PushTask, self).__init__()
+        self.conf = conf
+        self.image = image
+        self.logger = image.logger
+
+    @property
+    def name(self):
+        return 'PushTask(%s)' % self.image.name
+
+    def run(self):
+        image = self.image
+        self.logger.info('Trying to push the image')
+        try:
+            self.push_image(image)
+        except requests_exc.ConnectionError:
+            self.logger.exception('Make sure Docker is running and that you'
+                                  ' have the correct privileges to run Docker'
+                                  ' (root)')
+            image.status = STATUS_CONNECTION_ERROR
+        except Exception:
+            self.logger.exception('Unknown error when pushing')
+            image.status = STATUS_PUSH_ERROR
+        finally:
+            if image.status not in STATUS_ERRORS and image.status != STATUS_UNPROCESSED:
+                self.logger.info('Pushed successfully')
+                self.success = True
+            else:
+                self.success = False
+
+    def push_image(self, image):
+        kwargs = dict(stream=True)
+
+        # Since docker 3.0.0, the argument of 'insecure_registry' is removed.
+        # To be compatible, set 'insecure_registry=True' for old releases.
+        dc_running_ver = StrictVersion(docker.version)
+        if dc_running_ver < StrictVersion('3.0.0'):
+            kwargs['insecure_registry'] = True
+
+        for response in self.dc.push(image.canonical_name, **kwargs):
+            stream = json.loads(response)
+            if 'stream' in stream:
+                self.logger.info(stream['stream'])
+            elif 'errorDetail' in stream:
+                image.status = STATUS_ERROR
+                self.logger.error(stream['errorDetail']['message'])
+
+class BuildTask(DockerTask):
+    """Task that builds out an image."""
+
+    def __init__(self, conf, image, push_queue):
+        super(BuildTask, self).__init__()
+        self.conf = conf
+        self.image = image
+        self.push_queue = push_queue
+        self.nocache = not conf.cache
+        self.forcerm = not conf.keep
+        self.logger = image.logger
+
+    @property
+    def name(self):
+        return 'BuildTask(%s)' % self.image.name
+
+    @property
+    def followups(self):
+        followups = []
+        if self.conf.push and self.success:
+            followups.extend([
+                # If we are supposed to push the image into a docker
+                # repository, then make sure we do that...
+                PushIntoQueueTask(
+                    PushTask(self.conf, self.image),
+                    self.push_queue),
+            ])
+        if self.image.children and self.success:
+            for image in self.image.children:
+                if image.status == STATUS_UNMATCHED:
+                    continue
+                followups.append(BuildTask(self.conf, image, self.push_queue))
+        return followups
+
+    def run(self):
+        self.builder(self.image)
+        if self.image.status == STATUS_BUILT:
+            self.success = True
+
+    def process_source(self, image, source):
+        dest_archive = os.path.join(image.path, source['name'] + '-archive')
+        if source.get('type') == 'url':
+            self.logger.debug("Getting archive from %s", source['source'])
+            try:
+                r = requests.get(source['source'], timeout=self.conf.timeout)
+            except requests_exc.Timeout:
+                self.logger.exception(
+                    'Request timed out while getting archive from %s',
+                    source['source'])
+                image.status = STATUS_ERROR
+                return
+
+            if r.status_code == 200:
+                with open(dest_archive, 'wb') as f:
+                    f.write(r.content)
+            else:
+                self.logger.error(
+                    'Failed to download archive: status_code %s',
+                    r.status_code)
+                image.status = STATUS_ERROR
+                return
+
+        elif source.get('type') == 'git':
+            clone_dir = '{}-{}'.format(dest_archive,
+                                       source['reference'].replace('/', '-'))
+            try:
+                self.logger.debug("Cloning from %s", source['source'])
+                git.Git().clone(source['source'], clone_dir)
+                git.Git(clone_dir).checkout(source['reference'])
+                reference_sha = git.Git(clone_dir).rev_parse('HEAD')
+                self.logger.debug("Git checkout by reference %s (%s)",
+                                  source['reference'], reference_sha)
+            except Exception as e:
+                self.logger.error("Failed to get source from git", image.name)
+                self.logger.error("Error: %s", e)
+                # clean-up clone folder to retry
+                shutil.rmtree(clone_dir)
+                image.status = STATUS_ERROR
+                return
+
+            with tarfile.open(dest_archive, 'w') as tar:
+                tar.add(clone_dir, arcname=os.path.basename(clone_dir))
+
+        elif source.get('type') == 'local':
+            self.logger.debug("Getting local archive from %s",
+                              source['source'])
+            if os.path.isdir(source['source']):
+                with tarfile.open(dest_archive, 'w') as tar:
+                    tar.add(source['source'],
+                            arcname=os.path.basename(source['source']))
+            else:
+                shutil.copyfile(source['source'], dest_archive)
+
+        else:
+            self.logger.error("Wrong source type '%s'", source.get('type'))
+            image.status = STATUS_ERROR
+            return
+
+        # Set time on destination archive to epoch 0
+        os.utime(dest_archive, (0, 0))
+
+        return dest_archive
+
+    def update_buildargs(self):
+        buildargs = dict()
+        if self.conf.build_args:
+            buildargs = dict(self.conf.build_args)
+        proxy_vars = ('HTTP_PROXY', 'http_proxy', 'HTTPS_PROXY',
+                      'https_proxy', 'FTP_PROXY', 'ftp_proxy',
+                      'NO_PROXY', 'no_proxy')
+        for proxy_var in proxy_vars:
+            if proxy_var in os.environ and proxy_var not in buildargs:
+                buildargs[proxy_var] = os.environ.get(proxy_var)
+
+        if not buildargs:
+            return None
+        return buildargs
+
+    def builder(self, image):
+        self.logger.debug('Processing')
+        if image.status == STATUS_UNMATCHED:
+            return
+
+        if (image.parent is not None and
+                    image.parent.status in STATUS_ERRORS):
+            self.logger.error('Parent image error\'d with message "%s"',
+                              image.parent.status)
+            image.status = STATUS_PARENT_ERROR
+            return
+        image.status = STATUS_BUILDING
+        self.logger.info('Building')
+
+        if image.source and 'source' in image.source:
+            self.process_source(image, image.source)
+            if image.status in STATUS_ERRORS:
+                return
+
+        plugin_archives = list()
+        plugins_path = os.path.join(image.path, 'plugins')
+        for plugin in image.plugins:
+            archive_path = self.process_source(image, plugin)
+            if image.status in STATUS_ERRORS:
+                return
+            plugin_archives.append(archive_path)
+        if plugin_archives:
+            for plugin_archive in plugin_archives:
+                with tarfile.open(plugin_archive, 'r') as plugin_archive_tar:
+                    plugin_archive_tar.extractall(path=plugins_path)
+        else:
+            try:
+                os.mkdir(plugins_path)
+            except OSError as e:
+                if e.errno == errno.EEXIST:
+                    self.logger.info('Directory %s already exist. Skipping.',
+                                     plugins_path)
+                else:
+                    self.logger.error('Failed to create directory %s: %s',
+                                      plugins_path, e)
+                    image.status = STATUS_CONNECTION_ERROR
+                    return
+        with tarfile.open(os.path.join(image.path, 'plugins-archive'),
+                          'w') as tar:
+            tar.add(plugins_path, arcname='plugins')
+
+        # Pull the latest image for the base distro only
+        pull = self.conf.pull if image.parent is None else False
+        buildargs = self.update_buildargs()
+        try:
+            for response in self.dc.build(path=image.path,
+                                          tag=image.canonical_name,
+                                          nocache=not self.conf.cache,
+                                          rm=True,
+                                          pull=pull,
+                                          forcerm=self.forcerm,
+                                          buildargs=buildargs):
+                stream = json.loads(response.decode('utf-8'))
+                if 'stream' in stream:
+                    for line in stream['stream'].split('\n'):
+                        if line:
+                            self.logger.info('%s', line)
+                if 'errorDetail' in stream:
+                    image.status = STATUS_ERROR
+                    self.logger.error('Error\'d with the following message')
+                    for line in stream['errorDetail']['message'].split('\n'):
+                        if line:
+                            self.logger.error('%s', line)
+                    return
+        except docker.errors.DockerException:
+            image.status = STATUS_ERROR
+            self.logger.exception('Unknown docker error when building')
+        except Exception:
+            image.status = STATUS_ERROR
+            self.logger.exception('Unknown error when building')
+        else:
+            image.status = STATUS_BUILT
+            self.logger.info('Built')
 
 
 class Worker(object):
@@ -498,6 +790,28 @@ class Worker(object):
         list_children(base.children, ancestry)
         pprint.pprint(ancestry)
 
+    def build_queue(self, push_queue):
+        """Organizes Queue list
+
+        Return a list of Queues that have been organized into a hierarchy
+        based on dependencies
+        """
+        self.build_image_list()
+        self.find_parents()
+        self.filter_images()
+        queue = six.moves.queue.Queue()
+        for image in self.images:
+            if image.status == STATUS_UNMATCHED:
+                # Don't bother queuing up build tasks for things that
+                # were not matched in the first place... (not worth the
+                # effort to run them, if they won't be used anyway).
+                continue
+            if image.parent is None:
+                queue.put(BuildTask(self.conf, image, push_queue))
+                LOG.info('Added image %s to queue', image.name)
+
+        return queue
+
 
 def run_build():
     """Build container images.
@@ -543,3 +857,6 @@ def run_build():
         wk.filter_images()
         wk.list_dependencies()
         return
+
+    push_queue = six.moves.queue.Queue()
+    queue = wk.build_queue(push_queue)
