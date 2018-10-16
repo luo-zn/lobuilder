@@ -4,6 +4,7 @@
 # Created By: Zhennan.luo(Jenner)
 """
 import os
+import fixtures
 from oslo_config import cfg
 from oslotest import base as oslotest_base
 from lobuilder.common import config as common_config
