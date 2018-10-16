@@ -10,7 +10,11 @@ try:
     from kolla.common.config import BASE_OS_DISTRO, DISTRO_RELEASE, DELOREAN, \
         DELOREAN_DEPS, INSTALL_TYPE_CHOICES, TARBALLS_BASE, _PROFILE_OPTS, \
         _CLI_OPTS, _BASE_OPTS, SOURCES, USERS
+    from kolla import version as kolla_version
+    KOLLA_VERSION = kolla_version.version_info.cached_version_string()
 except Exception as e:
+    from lobuilder import version as lobuilder_version
+    KOLLA_VERSION = lobuilder_version.version_info.cached_version_string()
     BASE_OS_DISTRO = ['centos', 'rhel', 'ubuntu', 'oraclelinux', 'debian']
     DISTRO_RELEASE = {
         'centos': '7',
