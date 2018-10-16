@@ -208,8 +208,9 @@ class Worker(object):
         pdb.set_trace()
         if edp and os.path.exists(edp):
             for name in os.listdir(edp):
+                src_dir = os.path.join(edp, name)
                 image_dir = os.path.join(working_dir, name)
-                if os.path.isdir(image_dir):
+                if os.path.isdir(src_dir):
                     if os.path.exists(image_dir):
                         shutil.rmtree(image_dir)
                     shutil.copytree(os.path.join(edp, name), image_dir)
