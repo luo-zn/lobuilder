@@ -91,7 +91,7 @@ class WorkerTest(base.TestCase):
         """Ensure regex used to parse plugins adds them to the correct image"""
         self.conf.set_override('install_type', 'source')
 
-        wk = build.KollaWorker(self.conf)
+        wk = build.Worker(self.conf)
         wk.setup_working_dir()
         wk.find_dockerfiles()
         wk.create_dockerfiles()
