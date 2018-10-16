@@ -53,10 +53,54 @@ class WorkerTest(base.TestCase):
 
     def test_extend_docker_path(self):
         fake_extend_path = os.path.abspath(os.path.join(
-            os.path.dirname(os.path.realpath(__file__)), 'fakes','docker'))
+            os.path.dirname(os.path.realpath(__file__)), 'fakes', 'docker'))
         self.conf.set_default("extend_docker_path", fake_extend_path)
         wk = build.Worker(self.conf)
         wk.setup_working_dir()
         images_dir = os.listdir(wk.working_dir)
         for item in os.listdir(fake_extend_path):
             self.assertIn(item, images_dir)
+
+    def test_build_image_list_adds_plugins(self):
+
+        self.conf.set_override('install_type', 'source')
+
+        wk = build.Worker(self.conf)
+        wk.setup_working_dir()
+        wk.find_dockerfiles()
+        wk.create_dockerfiles()
+        wk.build_image_list()
+        expected_plugin = {
+            'name': 'neutron-server-plugin-networking-arista',
+            'reference': 'master',
+            'source': 'https://git.openstack.org/openstack/networking-arista',
+            'type': 'git'
+        }
+        found = False
+        for image in wk.images:
+            if image.name == 'neutron-server':
+                for plugin in image.plugins:
+                    if plugin == expected_plugin:
+                        found = True
+                        break
+                break
+        if not found:
+            self.fail('Can not find the expected neutron arista plugin')
+
+    def test_build_image_list_plugin_parsing(self):
+        """Ensure regex used to parse plugins adds them to the correct image"""
+        self.conf.set_override('install_type', 'source')
+
+        wk = build.KollaWorker(self.conf)
+        wk.setup_working_dir()
+        wk.find_dockerfiles()
+        wk.create_dockerfiles()
+        wk.build_image_list()
+        for image in wk.images:
+            if image.name == 'base':
+                self.assertEqual(len(image.plugins), 0,
+                                 'base image should not have any plugins '
+                                 'registered')
+                break
+        else:
+            self.fail('Expected to find the base image in this test')
