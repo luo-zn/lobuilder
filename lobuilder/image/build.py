@@ -39,6 +39,32 @@ class Worker(object):
         self.conf = conf
         self.images_dir = self._get_images_dir()
 
+        self.registry = conf.registry
+        if self.registry:
+            self.namespace = self.registry + '/' + conf.namespace
+        else:
+            self.namespace = conf.namespace
+
+        self.base = conf.base
+        self.base_tag = conf.base_tag
+        self.install_type = conf.install_type
+        self.tag = conf.tag
+        self.images = list()
+        rpm_setup_config = ([repo_file for repo_file in
+                             conf.rpm_setup_config if repo_file is not None])
+        self.rpm_setup = self.build_rpm_setup(rpm_setup_config)
+
+        self._check_base_distribute()
+        self._check_install_type()
+
+        self.image_prefix = self.base + '-' + self.install_type + '-'
+
+        self.regex = conf.regex
+        self.image_statuses_bad = dict()
+        self.image_statuses_good = dict()
+        self.image_statuses_unmatched = dict()
+        self.maintainer = conf.maintainer
+
     def _get_images_dir(self):
         possible_paths = [
             PROJECT_ROOT,
@@ -59,6 +85,61 @@ class Worker(object):
         else:
             raise exception.DirNotFoundException('Image dir can not '
                                                  'be found')
+
+    def _check_base_distribute(self):
+        rh_base = ['centos', 'oraclelinux', 'rhel']
+        rh_type = ['source', 'binary', 'rdo', 'rhos']
+        deb_base = ['ubuntu', 'debian']
+        deb_type = ['source', 'binary']
+        if not ((self.base in rh_base and self.install_type in rh_type) or
+                    (self.base in deb_base and self.install_type in deb_type)):
+            raise exception.MismatchBaseTypeException(
+                '{} is unavailable for {}'.format(self.install_type, self.base)
+            )
+
+    def _check_install_type(self):
+        if self.install_type == 'binary':
+            self.install_metatype = 'rdo'
+        elif self.install_type == 'source':
+            self.install_metatype = 'mixed'
+        elif self.install_type == 'rdo':
+            self.install_type = 'binary'
+            self.install_metatype = 'rdo'
+        elif self.install_type == 'rhos':
+            self.install_type = 'binary'
+            self.install_metatype = 'rhos'
+        else:
+            raise exception.UnknownBuildTypeException(
+                'Unknown install type'
+            )
+
+    def build_rpm_setup(self, rpm_setup_config):
+        """Generates a list of docker commands based on provided configuration.
+
+        :param rpm_setup_config: A list of .rpm or .repo paths or URLs
+        :return: A list of docker commands
+        """
+        rpm_setup = list()
+        for config in rpm_setup_config:
+            if config.endswith('.rpm'):
+                # RPM files can be installed with yum from file path or url
+                cmd = "RUN yum -y install {}".format(config)
+            elif config.endswith('.repo'):
+                if config.startswith('http'):
+                    # Curl http://url/etc.repo to /etc/yum.repos.d/etc.repo
+                    name = config.split('/')[-1]
+                    cmd = "RUN curl -L {} -o /etc/yum.repos.d/{}".format(
+                        config, name)
+                else:
+                    # Copy .repo file from filesystem
+                    cmd = "COPY {} /etc/yum.repos.d/".format(config)
+            else:
+                raise exception.RpmSetupUnknownConfig(
+                    'RPM setup must be provided as .rpm or .repo files.'
+                    ' Attempted configuration was {}'.format(config)
+                )
+            rpm_setup.append(cmd)
+        return rpm_setup
 
 
 def run_build():
