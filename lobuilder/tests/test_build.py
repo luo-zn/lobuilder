@@ -8,15 +8,7 @@ import itertools
 from lobuilder.tests import base
 from lobuilder import exception
 from lobuilder.image import build
-
-FAKE_IMAGE = build.Image(
-    'image-base', 'image-base:latest',
-    '/fake/path', parent_name=None,
-    parent=None, status=build.STATUS_MATCHED)
-FAKE_IMAGE_CHILD = build.Image(
-    'image-child', 'image-child:latest',
-    '/fake/path2', parent_name='image-base',
-    parent=FAKE_IMAGE, status=build.STATUS_MATCHED)
+from lobuilder.tests.fakes import FAKE_IMAGE, FAKE_IMAGE_CHILD
 
 
 class WorkerTest(base.TestCase):
@@ -61,7 +53,9 @@ class WorkerTest(base.TestCase):
     def test_extend_docker_path(self):
         import pdb;
         pdb.set_trace()
-        self.conf.set_default("extend_docker_path", "/fake/extend_path")
+        fake_extend_path = os.path.abspath(os.path.join(
+            os.path.dirname(os.path.realpath(__file__)), 'fakes'))
+        self.conf.set_default("extend_docker_path", fake_extend_path)
         wk = build.Worker(self.conf)
 
         wk.setup_working_dir()
