@@ -5,6 +5,7 @@
 """
 import os
 from oslo_config import cfg
+from oslotest import base as oslotest_base
 from lobuilder.common import config as common_config
 
 TESTS_ROOT = os.path.dirname(os.path.abspath(__file__))
