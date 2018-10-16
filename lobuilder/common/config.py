@@ -208,6 +208,8 @@ except Exception as e:
         cfg.StrOpt('logs-dir', help='Path to logs directory'),
         cfg.BoolOpt('pull', default=True,
                     help='Attempt to pull a newer version of the base image.'),
+
+        cfg.StrOpt('extend_docker_path', help='Extend Custom Docker images.'),
     ]
 
     _BASE_OPTS = [
