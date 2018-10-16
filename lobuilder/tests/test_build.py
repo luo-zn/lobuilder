@@ -13,6 +13,23 @@ from lobuilder.image import build
 from lobuilder.tests.fakes import FAKE_IMAGE, FAKE_IMAGE_CHILD
 
 
+class TasksTest(base.TestCase):
+    def setUp(self):
+        super(TasksTest, self).setUp()
+        self.image = FAKE_IMAGE.copy()
+        # NOTE(jeffrey4l): use a real, temporary dir
+        self.image.path = self.useFixture(fixtures.TempDir()).path
+
+    @mock.patch('docker.version', '2.7.0')
+    @mock.patch.dict(os.environ, clear=True)
+    @mock.patch('docker.Client')
+    def test_push_image_before_v3_0_0(self, mock_client):
+        pusher = build.PushTask(self.conf, self.image)
+        pusher.run()
+        mock_client().push.assert_called_once_with(
+            self.image.canonical_name, stream=True, insecure_registry=True)
+
+
 class WorkerTest(base.TestCase):
     config_file = 'default.conf'
 
