@@ -23,7 +23,7 @@ import git
 from oslo_config import cfg
 from distutils.version import StrictVersion
 from requests import exceptions as requests_exc
-from lobuilder import PROJECT_ROOT
+from lobuilder.cmd.build import PROJECT_ROOT
 from lobuilder import exception
 from lobuilder.common import task
 from lobuilder.common import config as common_config
