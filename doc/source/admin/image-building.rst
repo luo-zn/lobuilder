@@ -4,7 +4,7 @@
 Building Container Images
 =========================
 
-The ``kolla-build`` command is responsible for building Docker images.
+The ``lo-build`` command is responsible for building Docker images.
 
 .. note::
 
@@ -12,13 +12,13 @@ The ``kolla-build`` command is responsible for building Docker images.
   a local copy of Kolla. Use the ``tools/build.py`` script instead of
   ``kolla-build`` command in all below instructions.
 
-Generating kolla-build.conf
+Generating lo-build.conf
 ===========================
 
 Install tox and generate the build configuration. The build configuration is
 designed to hold advanced customizations when building containers.
 
-Create kolla-build.conf using the following steps.
+Create lo-build.conf using the following steps.
 
 ::
 
