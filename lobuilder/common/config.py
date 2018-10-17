@@ -767,7 +767,7 @@ except Exception as e:
 
 
 _CLI_OPTS.extend([
-    cfg.StrOpt('extend_docker_path', help='Extend Custom Docker images.'),
+    cfg.StrOpt('extend-docker-path', help='Extend Custom Docker images.'),
     cfg.StrOpt('docker-build-network', default='default',
                help='Set the networking mode for the RUN instructions '
                     'during build (default "default")'),
