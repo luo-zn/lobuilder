@@ -23,12 +23,12 @@ import git
 from oslo_config import cfg
 from distutils.version import StrictVersion
 from requests import exceptions as requests_exc
+from ..project_root import PROJECT_ROOT
 from lobuilder import exception
 from lobuilder.common import task
 from lobuilder.common import config as common_config
 from lobuilder.template import filters as jinja_filters
 from lobuilder.template import methods as jinja_methods
-from lobuilder.cmd.build import PROJECT_ROOT
 
 
 def make_a_logger(conf=None, image_name=None):
