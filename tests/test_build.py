@@ -8,11 +8,13 @@ import os
 import sys
 import testtools
 from mock import patch
+from oslotest import base
 from oslo_log import log as logging
 from oslo_log import fixture as log_fixture
-sys.path.append(
-    os.path.abspath(os.path.join(os.path.dirname(__file__), '../tools')))
+
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from lobuilder.image import build
+
 LOG = logging.getLogger(__name__)
 
 
@@ -51,3 +53,29 @@ class BuildTest(object):
             LOG.warning(">>> Image '%s' was not matched", image)
 
         self.assertEqual(failures, 0, "%d failure(s) occurred" % failures)
+
+
+class BuildTestCentosBinary(BuildTest, base.BaseTestCase):
+    excluded_images = [
+        "bifrost-base",
+        "congress-base",
+        "freezer-base",
+        "kafka",
+        "karbor-base",
+        "kuryr-base",
+        "manila-data",
+        "monasca-base",
+        "neutron-sfc-agent",
+        "searchlight-base",
+        "senlin-base",
+        "solum-base",
+        "tacker",
+        "vitrage-base",
+        "vmtp",
+        "zun-base",
+    ]
+
+    def setUp(self):
+        super(BuildTestCentosBinary, self).setUp()
+        self.build_args.extend(["--base", "centos",
+                                "--type", "binary"])
