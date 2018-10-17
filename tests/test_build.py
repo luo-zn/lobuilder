@@ -10,7 +10,7 @@ import testtools
 from mock import patch
 from oslo_log import log as logging
 from oslo_log import fixture as log_fixture
-
+from lobuilder.image import build
 LOG = logging.getLogger(__name__)
 
 
