@@ -212,8 +212,6 @@ except Exception as e:
         cfg.StrOpt('logs-dir', help='Path to logs directory'),
         cfg.BoolOpt('pull', default=True,
                     help='Attempt to pull a newer version of the base image.'),
-
-        cfg.StrOpt('extend_docker_path', help='Extend Custom Docker images.'),
     ]
 
     _BASE_OPTS = [
@@ -768,6 +766,12 @@ except Exception as e:
     }
 
 
+_CLI_OPTS.extend([
+    cfg.StrOpt('extend_docker_path', help='Extend Custom Docker images.'),
+    cfg.StrOpt('docker-build-network', default='default',
+               help='Set the networking mode for the RUN instructions '
+                    'during build (default "default")'),
+])
 def get_source_opts(type_=None, location=None, reference=None):
     return [cfg.StrOpt('type', choices=['local', 'git', 'url'],
                        default=type_,
