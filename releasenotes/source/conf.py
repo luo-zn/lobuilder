@@ -188,7 +188,8 @@ htmlhelp_basename = 'LobuilderReleaseNotesdoc'
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-    ('index', 'LobuilderReleaseNotes.tex', u'Lobuilder Release Notes Documentation',
+    ('index', 'LobuilderReleaseNotes.tex',
+     u'Lobuilder Release Notes Documentation',
      u'Lobuilder developers', 'manual'),
 ]
 
@@ -218,7 +219,8 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    ('index', 'lobuilderreleasenotes', u'Lobuilder Release Notes Documentation',
+    ('index', 'lobuilderreleasenotes',
+     u'Lobuilder Release Notes Documentation',
      [u'Lobuilder developers'], 1)
 ]
 
@@ -232,7 +234,8 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-    ('index', 'LobuilderReleaseNotes', u'Lobuilder Release Notes Documentation',
+    ('index', 'LobuilderReleaseNotes',
+     u'Lobuilder Release Notes Documentation',
      u'Lobuilder developers', 'LobuilderReleaseNotes',
      'One line description of project.', 'Miscellaneous'),
 ]
