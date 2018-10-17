@@ -1,18 +1,17 @@
 #!/bin/env python
 # -*- coding:utf-8 -*-
-
+import os
+import sys
 import threading
 
 import pbr.version
-
 
 __version__ = pbr.version.VersionInfo('lobuilder').version_string()
 
 # Make a project global TLS trace storage repository
 TLS = threading.local()
 
-import os
-import sys
+
 # NOTE(SamYaple): Update the search path to prefer PROJECT_ROOT as the source
 #                 of packages to import if we are using local tools instead of
 #                 pip installed
