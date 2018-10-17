@@ -2,6 +2,7 @@
 # -*- coding:utf-8 -*-
 
 import sys
+from lobuilder import PROJECT_ROOT # noqa
 from lobuilder.image import build
 
 
