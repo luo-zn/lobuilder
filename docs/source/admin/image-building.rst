@@ -8,9 +8,8 @@ The ``lo-build`` command is responsible for building Docker images.
 
 .. note::
 
-  When developing Kolla it can be useful to build images using files located in
-  a local copy of Kolla. Use the ``tools/build.py`` script instead of
-  ``lo-build`` command in all below instructions.
+  Use the ``tools/lo-build`` script directly after clone lobuilder project
+  in local so that you don't need to install lobuilder.
 
 Generating lo-build.conf
 ===========================
