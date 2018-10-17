@@ -444,8 +444,8 @@ class Worker(object):
     def _get_images_dir(self):
         possible_paths = (
             PROJECT_ROOT,
-            os.path.join(sys.prefix, 'share/kolla'),
-            os.path.join(sys.prefix, 'local/share/kolla'))
+            os.path.join(sys.prefix, 'share/lobuilder'),
+            os.path.join(sys.prefix, 'local/share/lobuilder'))
 
         for path in possible_paths:
             image_path = os.path.join(path, 'docker')
