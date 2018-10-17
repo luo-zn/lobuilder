@@ -9,3 +9,5 @@ MAINTAINER {{ maintainer }}
     && useradd -M --shell /usr/sbin/nologin --uid {{ user.uid }} --gid {{ user.gid }} {{ name }}
         {%- if not loop.last %} \{% endif -%}
 {%- endfor %}
+
+LABEL kolla_version="{{ kolla_version }}"
