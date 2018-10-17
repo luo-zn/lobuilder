@@ -185,7 +185,8 @@ class PushTask(DockerTask):
             self.logger.exception('Unknown error when pushing')
             image.status = STATUS_PUSH_ERROR
         finally:
-            if image.status not in STATUS_ERRORS and image.status != STATUS_UNPROCESSED:
+            if image.status not in STATUS_ERRORS and image.status != \
+                    STATUS_UNPROCESSED:
                 self.logger.info('Pushed successfully')
                 self.success = True
             else:
