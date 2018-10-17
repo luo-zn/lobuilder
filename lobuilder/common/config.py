@@ -218,7 +218,7 @@ except Exception as e:
 
     _BASE_OPTS = [
         cfg.StrOpt('maintainer',
-                   default='Kolla Project (https://launchpad.net/kolla)',
+                   default='Lobuilder Project',
                    help='The MAINTAINER field'),
         cfg.ListOpt('rpm_setup_config', default=[],
                     help=('Comma separated list of .rpm or .repo file(s) '
