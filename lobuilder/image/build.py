@@ -465,7 +465,7 @@ class Worker(object):
         deb_base = ['ubuntu', 'debian']
         deb_type = ['source', 'binary']
         if not ((self.base in rh_base and self.install_type in rh_type) or
-                    (self.base in deb_base and self.install_type in deb_type)):
+                (self.base in deb_base and self.install_type in deb_type)):
             raise exception.MismatchBaseTypeException(
                 '{} is unavailable for {}'.format(self.install_type, self.base)
             )
