@@ -386,13 +386,15 @@ class BuildTask(DockerTask):
         pull = self.conf.pull if image.parent is None else False
         buildargs = self.update_buildargs()
         try:
-            for response in self.dc.build(path=image.path,
-                                          tag=image.canonical_name,
-                                          nocache=not self.conf.cache,
-                                          rm=True,
-                                          pull=pull,
-                                          forcerm=self.forcerm,
-                                          buildargs=buildargs):
+            build_kwargs = dict(path=image.path,
+                                tag=image.canonical_name,
+                                nocache=not self.conf.cache,
+                                rm=True,
+                                pull=pull,
+                                forcerm=self.forcerm,
+                                buildargs=buildargs,
+                                network_mode=self.conf.docker_build_network)
+            for response in self.dc.build(**build_kwargs):
                 stream = json.loads(response.decode('utf-8'))
                 if 'stream' in stream:
                     for line in stream['stream'].split('\n'):

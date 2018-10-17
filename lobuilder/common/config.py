@@ -772,6 +772,8 @@ _CLI_OPTS.extend([
                help='Set the networking mode for the RUN instructions '
                     'during build (default "default")'),
 ])
+
+
 def get_source_opts(type_=None, location=None, reference=None):
     return [cfg.StrOpt('type', choices=['local', 'git', 'url'],
                        default=type_,
