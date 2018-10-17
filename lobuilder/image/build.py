@@ -537,12 +537,16 @@ class Worker(object):
         edp = self.conf.extend_docker_path
         if edp and os.path.exists(edp):
             for name in os.listdir(edp):
-                src_dir = os.path.join(edp, name)
-                image_dir = os.path.join(working_dir, name)
-                if os.path.isdir(src_dir):
-                    if os.path.exists(image_dir):
-                        shutil.rmtree(image_dir)
-                    shutil.copytree(os.path.join(edp, name), image_dir)
+                src_path = os.path.join(edp, name)
+                dst_path = os.path.join(working_dir, name)
+                if os.path.isdir(src_path):
+                    if os.path.exists(dst_path):
+                        shutil.rmtree(dst_path)
+                    shutil.copytree(src_path, dst_path)
+                elif os.path.isfile(src_path):
+                    if os.path.exists(dst_path):
+                        os.remove(dst_path)
+                    shutil.copyfile(src_path, dst_path)
 
     def setup_working_dir(self):
         """Creates a working directory for use while building"""
