@@ -1,2 +1,2 @@
 #!/bin/bash
-python ../lobuilder/cmd/build.py "$@"
+python lobuilder/cmd/build.py "$@"
