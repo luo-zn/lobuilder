@@ -28,6 +28,7 @@ from lobuilder.common import task
 from lobuilder.common import config as common_config
 from lobuilder.template import filters as jinja_filters
 from lobuilder.template import methods as jinja_methods
+from lobuilder.cmd.build import PROJECT_ROOT
 
 
 def make_a_logger(conf=None, image_name=None):
@@ -335,7 +336,7 @@ class BuildTask(DockerTask):
             return
 
         if (image.parent is not None and
-                image.parent.status in STATUS_ERRORS):
+                    image.parent.status in STATUS_ERRORS):
             self.logger.error('Parent image error\'d with message "%s"',
                               image.parent.status)
             image.status = STATUS_PARENT_ERROR
