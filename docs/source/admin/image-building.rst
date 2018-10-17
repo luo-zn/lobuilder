@@ -10,7 +10,7 @@ The ``lo-build`` command is responsible for building Docker images.
 
   When developing Kolla it can be useful to build images using files located in
   a local copy of Kolla. Use the ``tools/build.py`` script instead of
-  ``kolla-build`` command in all below instructions.
+  ``lo-build`` command in all below instructions.
 
 Generating lo-build.conf
 ===========================
@@ -26,22 +26,22 @@ Create lo-build.conf using the following steps.
     tox -e genconfig
 
 The location of the generated configuration file is
-``etc/kolla/kolla-build.conf``, it can also be copied to ``/etc/kolla``. The
-default location is one of ``/etc/kolla/kolla-build.conf`` or
-``etc/kolla/kolla-build.conf``.
+``etc/lobuilder/lo-build.conf``, it can also be copied to ``/etc/lobuilder``. The
+default location is one of ``/etc/lobuilder/lo-build.conf`` or
+``etc/lobuilder/lo-build.conf``.
 
 Guide
 =====
 
 In general, images are built like this::
 
-    kolla-build
+    lo-build
 
 By default, the above command would build all images based on CentOS image.
 
 The operator can change the base distro with the ``-b`` option::
 
-    kolla-build -b ubuntu
+    lo-build -b ubuntu
 
 There are following distros available for building images:
 
@@ -57,18 +57,18 @@ There are following distros available for building images:
 It is possible to build only a subset of images by specifying them on the
 command line::
 
-    kolla-build keystone
+    lo-build keystone
 
 In this case, the build script builds all images which name contains the
 ``keystone`` string along with their dependencies.
 
 Multiple names may be specified on the command line::
 
-    kolla-build keystone nova
+    lo-build keystone nova
 
 The set of images built can be defined as a profile in the ``profiles`` section
-of ``kolla-build.conf``. Later, profile can be specified by ``--profile`` CLI
-argument or ``profile`` option in ``kolla-build.conf``. Kolla provides some
+of ``lo-build.conf``. Later, profile can be specified by ``--profile`` CLI
+argument or ``profile`` option in ``lo-build.conf``. Kolla provides some
 pre-defined profiles:
 
 - ``infra`` infrastructure-related images
@@ -77,35 +77,35 @@ pre-defined profiles:
 - ``default`` minimal set of images for a working deploy
 
 For example, due to Magnum requires Heat, following profile can be add to
-``profiles`` section in ``kolla-build.conf`` ::
+``profiles`` section in ``lo-build.conf`` ::
 
     magnum = magnum,heat
 
 These images can be built using command line ::
 
-    kolla-build --profile magnum
+    lo-build --profile magnum
 
-Or put following line to ``DEFAULT`` section in ``kolla-build.conf`` ::
+Or put following line to ``DEFAULT`` section in ``lo-build.conf`` ::
 
     profile = magnum
 
 
-``kolla-build`` uses ``kolla`` as default Docker namespace. This is
+``lo-build`` uses ``kolla`` as default Docker namespace. This is
 controlled with the ``-n`` command line option. To push images to a Dockerhub
-repository named ``mykollarepo``::
+repository named ``myrepo``::
 
-    kolla-build -n mykollarepo --push
+    lo-build -n myrepo --push
 
 To push images to a `local registry
 <https://docs.openstack.org/kolla-ansible/latest/user/multinode.html#deploy-a-registry>`_,
 use
 ``--registry`` flag::
 
-    kolla-build --registry 172.22.2.81:5000 --push
+    lo-build --registry 172.22.2.81:5000 --push
 
 The build configuration can be customized using a config file, the default
-location being one of ``/etc/kolla/kolla-build.conf`` or
-``etc/kolla/kolla-build.conf``. This file can be generated using the following
+location being one of ``/etc/lobuilder/lo-build.conf`` or
+``etc/lobuilder/lo-build.conf``. This file can be generated using the following
 command::
 
     tox -e genconfig
@@ -119,16 +119,16 @@ installed from apt/yum. And the ``source`` means that OpenStack will be
 installed from source code. The default method of the OpenStack install is
 ``binary``. It can be changed to ``source`` using the ``-t`` option::
 
-    kolla-build -t source
+    lo-build -t source
 
 The locations of OpenStack source code are written in
-``etc/kolla/kolla-build.conf``.
+``etc/lobuilder/lo-build.conf``.
 Now the source type supports ``url``, ``git``, and ``local``. The location of
 the ``local`` source type can point to either a directory containing the source
 code or to a tarball of the source. The ``local`` source type permits to make
 the best use of the Docker cache.
 
-``etc/kolla/kolla-build.conf`` looks like::
+``etc/lobuilder/lo-build.conf`` looks like::
 
     [glance-base]
     type = url
@@ -158,7 +158,7 @@ overrides file, add the following::
 Dockerfile Customisation
 ========================
 
-As of the Newton release, the ``kolla-build`` tool provides a Jinja2 based
+As of the Newton release, the ``lo-build`` tool provides a Jinja2 based
 mechanism which allows operators to customise the Dockerfiles used to generate
 Kolla images.
 
@@ -190,7 +190,7 @@ First, create a file to contain the customisations, e.g.
 
 Then rebuild the horizon image, passing the ``--template-override`` argument::
 
-    kolla-build --template-override template-overrides.j2 horizon
+    lo-build --template-override template-overrides.j2 horizon
 
 .. note::
 
@@ -223,9 +223,9 @@ To add a package to this list, say, ``iproute``, first create a file, e.g.
 
 Then rebuild the horizon image, passing the ``--template-override`` argument:
 
-    kolla-build --template-override template-overrides.j2 horizon
+    lo-build --template-override template-overrides.j2 horizon
 
-Alternatively ``template_override`` can be set in ``kolla-build.conf``.
+Alternatively ``template_override`` can be set in ``lo-build.conf``.
 
 The ``append`` suffix in the above example carries special significance. It
 indicates the operation taken on the package list. The following is a complete
@@ -245,7 +245,7 @@ Using a different base image
 
 Base-image can be specified by argument ``--base-image``. For example::
 
-    kolla-build --base-image registry.access.redhat.com/rhel7/rhel --base rhel
+    lo-build --base-image registry.access.redhat.com/rhel7/rhel --base rhel
 
 
 Plugin Functionality
@@ -281,7 +281,7 @@ automatically made available to the build, within an archive named
 
     The following is available for source build types only.
 
-To use this, add a section to ``/etc/kolla/kolla-build.conf`` in the following
+To use this, add a section to ``/etc/lobuilder/lo-build.conf`` in the following
 format::
 
     [<image>-plugin-<plugin-name>]
@@ -290,7 +290,7 @@ Where ``<image>`` is the image that the plugin should be installed into, and
 ``<plugin-name>`` is the chosen plugin identifier.
 
 Continuing with the above example, add the following to
-``/etc/kolla/kolla-build.conf``::
+``/etc/lobuilder/lo-build.conf``::
 
     [neutron-server-plugin-networking-cisco]
     type = git
@@ -320,7 +320,7 @@ The build method allows the operator to build containers from custom repos.
 The repos are accepted as a list of comma separated values and can be in the
 form of ``.repo``, ``.rpm``, or a url. See examples below.
 
-Update ``rpm_setup_config`` in ``/etc/kolla/kolla-build.conf``::
+Update ``rpm_setup_config`` in ``/etc/lobuilder/lo-build.conf``::
 
     rpm_setup_config = http://trunk.rdoproject.org/centos7/currrent/delorean.repo,http://trunk.rdoproject.org/centos7/delorean-deps.repo
 
