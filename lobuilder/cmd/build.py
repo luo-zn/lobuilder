@@ -3,7 +3,6 @@
 
 import os
 import sys
-
 from .. import project_root
 from lobuilder.image import build
 
