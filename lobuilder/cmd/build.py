@@ -1,9 +1,8 @@
 #!/bin/env python
 # -*- coding:utf-8 -*-
 
-import os
 import sys
-from .. import project_root
+from .. import project_root  # noqa
 from lobuilder.image import build
 
 
