@@ -120,8 +120,8 @@ class Image(object):
     def __repr__(self):
         return ("Image(%s, %s, %s, parent_name=%s,"
                 " status=%s, parent=%s, source=%s)") % (
-                   self.name, self.canonical_name, self.path,
-                   self.parent_name, self.status, self.parent, self.source)
+               self.name, self.canonical_name, self.path, self.parent_name,
+               self.status, self.parent, self.source)
 
 
 class DockerTask(task.Task):
