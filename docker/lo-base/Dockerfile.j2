@@ -26,10 +26,10 @@ RUN cat /work-dir/custom_bashrc >> /etc/skel/.bashrc \
     && chmod +x /usr/local/bin/dumb-init \
     && cp /work-dir/set_configs.py /usr/local/bin/set_configs
     && chmod 755 /usr/local/bin/kolla_set_configs \
-    && cp /work-dir/cmd_start /usr/local/bin/kolla_start \
-    && chmod 755 /usr/local/bin/kolla_start
+    && cp /work-dir/cmd_start /usr/local/bin/cmd_start \
+    && chmod 755 /usr/local/bin/cmd_start
 
 # PS1 var when used /bin/sh shell
 ENV PS1="$(tput bold)($(printenv CONTAINER_NAME))$(tput sgr0)[$(id -un)@$(hostname -s) $(pwd)]$ "
 
-CMD ["kolla_start"]
+CMD ["cmd_start"]
