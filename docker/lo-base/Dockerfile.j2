@@ -1,2 +1,16 @@
 FROM {{ base_image }}:{{ base_distro_tag }}
 MAINTAINER {{ maintainer }}
+
+{%- if specific_data.gid %}
+RUN groupadd --force --gid {{ specific_data.gid }} {{ specific_data.gname }}\
+&& useradd -M --shell /usr/sbin/nologin --uid {{ specific_data.uid }} --gid {{ specific_data.gid }} {{ specific_data.gname }}
+{% else %}
+
+{%- for name, user in users | dictsort() %}
+{% if loop.first -%}RUN {% else %}    && {% endif -%}
+    groupadd --force --gid {{ user.gid }} {{ name }} \
+    && useradd -M --shell /usr/sbin/nologin --uid {{ user.uid }} --gid {{ user.gid }} {{ name }}
+        {%- if not loop.last %} \{% endif -%}
+{%- endfor %}
+
+{% endif -%}

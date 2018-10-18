@@ -774,6 +774,7 @@ except Exception as e:
 def opts_for_sections_name():
     opts = copy.copy(_CLI_OPTS)
     opts.extend(get_user_opts("", ""))
+    opts.append(cfg.StrOpt('gname', default="", help='The group name'),)
     return opts
 
 
