@@ -614,10 +614,9 @@ class Worker(object):
         return {tpl_name: tpl_content}
 
     def add_specific_data_2image(self, old_data, image_name):
-        match = re.search('^.*-image$', image_name)
-        if match:
-            image_data = self.conf[match.group(0)]
-            old_data["specific_data"] = dict(image_data.iteritems())
+        sd = getattr(self.conf, "{}-image".format(image_name), None)
+        if sd:
+            old_data["specific_data"] = dict(sd.iteritems())
         return old_data
 
     def create_dockerfiles(self):
