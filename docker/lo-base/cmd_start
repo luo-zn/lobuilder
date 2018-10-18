@@ -17,7 +17,7 @@ exec_extend_start_script(){
 
 
 main(){
-
+    mkdir -p /var/lib/lobuilder/config_files
 # Processing /var/lib/lobuilder/config_files/config.json as root.  This is necessary
 # to permit certain files to be controlled by the root user which should
 # not be writable by the dropped-privileged user, especially /run_command
