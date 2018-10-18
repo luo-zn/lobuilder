@@ -2,7 +2,7 @@
 set -o errexit
 
 exec_extend_start_script(){
-    local source_dir=/var/lib/kolla/config_files
+    local source_dir=/var/lib/lobuilder/config_files
     local dest_dir=/usr/local/bin
     if [[ -f ${source_dir}/extend_start ]];then
         \cp ${source_dir}/extend_start ${dest_dir}/extend_start
@@ -18,7 +18,7 @@ exec_extend_start_script(){
 
 main(){
 
-# Processing /var/lib/kolla/config_files/config.json as root.  This is necessary
+# Processing /var/lib/lobuilder/config_files/config.json as root.  This is necessary
 # to permit certain files to be controlled by the root user which should
 # not be writable by the dropped-privileged user, especially /run_command
     sudo -E /usr/local/bin/set_configs
