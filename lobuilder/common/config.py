@@ -1,6 +1,7 @@
 #!/bin/env python
 # -*- coding:utf-8 -*-
 
+import copy
 import itertools
 from oslo_config import cfg
 from oslo_config import types
@@ -11,9 +12,11 @@ try:
         DELOREAN_DEPS, INSTALL_TYPE_CHOICES, TARBALLS_BASE, _PROFILE_OPTS, \
         _CLI_OPTS, _BASE_OPTS, SOURCES, USERS
     from kolla import version as kolla_version
+
     KOLLA_VERSION = kolla_version.version_info.cached_version_string()
 except Exception as e:
     from lobuilder import version as lobuilder_version
+
     KOLLA_VERSION = lobuilder_version.version_info.cached_version_string()
     BASE_OS_DISTRO = ['centos', 'rhel', 'ubuntu', 'oraclelinux', 'debian']
     DISTRO_RELEASE = {
@@ -169,7 +172,9 @@ except Exception as e:
         cfg.MultiOpt('profile', types.String(), short='p',
                      help=('Build a pre-defined set of images, see [profiles]'
                            ' section in config. The default profiles are:'
-                           ' {}'.format(', '.join([opt.name for opt in _PROFILE_OPTS])))),  # noqa
+                           ' {}'.format(
+                         ', '.join([opt.name for opt in _PROFILE_OPTS])))),
+        # noqa
         cfg.BoolOpt('push', default=False,
                     help='Push images after building'),
         cfg.IntOpt('push-threads', default=1, min=1,
@@ -766,6 +771,12 @@ except Exception as e:
     }
 
 
+def opts_for_sections_name():
+    opts = copy.copy(_CLI_OPTS)
+    opts.extend(get_user_opts("", ""))
+    return opts
+
+
 _CLI_OPTS.extend([
     cfg.StrOpt('extend-docker-path', help='Extend Custom Docker images.'),
     cfg.ListOpt('sections-name', default='default',
@@ -832,6 +843,10 @@ def parse(conf, args, usage=None, prog=None, default_config_files=None):
          prog=prog,
          version=version.cached_version_string(),
          default_config_files=default_config_files)
+
+    if conf.sections_name:
+        for name in filter(None, conf.sections_name):
+            conf.register_opts(opts_for_sections_name(), group=name)
 
     # NOTE(jeffrey4l): set the default base tag based on the
     # base option
