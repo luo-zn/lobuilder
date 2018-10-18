@@ -613,6 +613,13 @@ class Worker(object):
             tpl_content += cont
         return {tpl_name: tpl_content}
 
+    def add_specific_data_2image(self, old_data, image_name):
+        match = re.search('^.*-image$', image_name)
+        if match:
+            image_data = self.conf[match.group(0)]
+            old_data["specific_data"] = dict(image_data.iteritems())
+        return old_data
+
     def create_dockerfiles(self):
         kolla_version = common_config.KOLLA_VERSION
         supported_distro_release = common_config.DISTRO_RELEASE.get(
@@ -634,6 +641,9 @@ class Worker(object):
                       'image_name': image_name,
                       'users': self.get_users(),
                       'rpm_setup': self.rpm_setup}
+
+            values = self.add_specific_data_2image(values, image_name)
+
             env = jinja2.Environment(  # nosec: not used to render HTML
                 loader=jinja2.FileSystemLoader(self.working_dir))
             env.filters.update(self._get_filters())
