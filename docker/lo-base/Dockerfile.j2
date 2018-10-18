@@ -32,3 +32,4 @@ RUN cat /work-dir/custom_bashrc >> /etc/skel/.bashrc \
 # PS1 var when used /bin/sh shell
 ENV PS1="$(tput bold)($(printenv CONTAINER_NAME))$(tput sgr0)[$(id -un)@$(hostname -s) $(pwd)]$ "
 
+CMD ["kolla_start"]
