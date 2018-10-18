@@ -25,9 +25,6 @@ main(){
     CMD=$(cat /run_command)
     ARGS=""
 
-    #start crond service
-    crond
-
     exec_extend_start_script
     echo "Running command: '${CMD}${ARGS:+ $ARGS}'"
     exec ${CMD} ${ARGS}
