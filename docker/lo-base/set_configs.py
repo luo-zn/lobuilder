@@ -292,7 +292,7 @@ def load_config():
         try:
             return json.loads(config_raw)
         except ValueError:
-            raise InvalidConfig('Invalid json for Kolla config')
+            raise InvalidConfig('Invalid json for Container config')
 
     def load_from_file():
         config_file = os.environ.get("KOLLA_CONFIG_FILE")
@@ -375,8 +375,8 @@ def handle_permissions(config):
 
 
 def execute_config_strategy(config):
-    config_strategy = os.environ.get("KOLLA_CONFIG_STRATEGY")
-    LOG.info("Kolla config strategy set to: %s", config_strategy)
+    config_strategy = os.environ.get("CONTAINER_CONFIG_STRATEGY")
+    LOG.info("Container config strategy set to: %s", config_strategy)
     if config_strategy == "COPY_ALWAYS":
         copy_config(config)
         handle_permissions(config)
@@ -390,7 +390,10 @@ def execute_config_strategy(config):
             handle_permissions(config)
             os.mknod('/configured')
     else:
-        raise InvalidConfig('KOLLA_CONFIG_STRATEGY is not set properly')
+        #Default CONFIG_STRATEG : COPY_ALWAYS
+        copy_config(config)
+        handle_permissions(config)
+        # raise InvalidConfig('CONTAINER_CONFIG_STRATEGY is not set properly')
 
 
 def execute_config_check(config):
