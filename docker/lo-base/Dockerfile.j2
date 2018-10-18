@@ -25,7 +25,7 @@ RUN cat /work-dir/custom_bashrc >> /etc/skel/.bashrc \
 && cp /work-dir/pkgs/dumb-init_1.2.2_amd64 /usr/local/bin/dumb-init \
 && chmod +x /usr/local/bin/dumb-init \
 && cp /work-dir/set_configs.py /usr/local/bin/set_configs \
-&& chmod 755 /usr/local/bin/kolla_set_configs \
+&& chmod 755 /usr/local/bin/set_configs \
 && cp /work-dir/cmd_start /usr/local/bin/cmd_start \
 && chmod 755 /usr/local/bin/cmd_start
 
