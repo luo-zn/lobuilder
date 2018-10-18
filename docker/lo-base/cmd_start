@@ -1,0 +1,37 @@
+#!/usr/local/bin/dumb-init /bin/bash
+set -o errexit
+
+exec_extend_start_script(){
+    local source_dir=/var/lib/kolla/config_files
+    local dest_dir=/usr/local/bin
+    if [[ -f ${source_dir}/extend_start ]];then
+        \cp ${source_dir}/extend_start ${dest_dir}/extend_start
+        chmod 755 ${dest_dir}/extend_start
+    fi
+    if [[ -f ${dest_dir}/extend_start ]]; then
+        # Run additional commands if present
+        . extend_start
+    fi
+}
+
+
+
+main(){
+
+# Processing /var/lib/kolla/config_files/config.json as root.  This is necessary
+# to permit certain files to be controlled by the root user which should
+# not be writable by the dropped-privileged user, especially /run_command
+    sudo -E /usr/local/bin/set_configs
+    CMD=$(cat /run_command)
+    ARGS=""
+
+    #start crond service
+    crond
+
+    exec_extend_start_script
+    echo "Running command: '${CMD}${ARGS:+ $ARGS}'"
+    exec ${CMD} ${ARGS}
+
+}
+
+main
