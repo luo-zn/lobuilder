@@ -20,16 +20,17 @@ COPY ./ /work-dir/
 
 #### Customize PS1 to be used with bash shell
 RUN cat /work-dir/custom_bashrc >> /etc/skel/.bashrc \
-    && cat /work-dir/custom_bashrc >> /root/.bashrc \
-    && yum install -y /work-dir/pkgs/sudo-1.8.19p2-14.el7_5.x86_64.rpm \
-    && cp /work-dir/pkgs/dumb-init_1.2.2_amd64 /usr/local/bin/dumb-init \
-    && chmod +x /usr/local/bin/dumb-init \
-    && cp /work-dir/set_configs.py /usr/local/bin/set_configs
-    && chmod 755 /usr/local/bin/kolla_set_configs \
-    && cp /work-dir/cmd_start /usr/local/bin/cmd_start \
-    && chmod 755 /usr/local/bin/cmd_start
+&& cat /work-dir/custom_bashrc >> /root/.bashrc \
+&& yum install -y /work-dir/pkgs/sudo-1.8.19p2-14.el7_5.x86_64.rpm \
+&& cp /work-dir/pkgs/dumb-init_1.2.2_amd64 /usr/local/bin/dumb-init \
+&& chmod +x /usr/local/bin/dumb-init \
+&& cp /work-dir/set_configs.py /usr/local/bin/set_configs
+&& chmod 755 /usr/local/bin/kolla_set_configs \
+&& cp /work-dir/cmd_start /usr/local/bin/cmd_start \
+&& chmod 755 /usr/local/bin/cmd_start
 
 # PS1 var when used /bin/sh shell
 ENV PS1="$(tput bold)($(printenv CONTAINER_NAME))$(tput sgr0)[$(id -un)@$(hostname -s) $(pwd)]$ "
 
+RUN rm -rf /work-dir
 CMD ["cmd_start"]
