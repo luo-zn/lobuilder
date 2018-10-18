@@ -1,8 +1,27 @@
+{%- if specific_data.base_image%}
+FROM {{ specific_data.base_image }}:{{ base_distro_tag }}
+{% else %}
 FROM {{ base_image }}:{{ base_distro_tag }}
+{% endif -%}
+{%- if specific_data.maintainer %}
+MAINTAINER {{ specific_data.maintainer }}
+{% else %}
 MAINTAINER {{ maintainer }}
+{% endif -%}
+
+ENV CONTAINER_NAME {{ image_name }}
 
 {%- if specific_data.gid %}
 RUN groupadd --force --gid {{ specific_data.gid }} {{ specific_data.gname }}\
 && useradd -M --shell /usr/sbin/nologin --uid {{ specific_data.uid }} --gid {{ specific_data.gid }} {{ specific_data.gname }}
-
 {% endif -%}
+
+
+#### Customize PS1 to be used with bash shell
+COPY custom_bashrc /tmp/
+RUN cat /tmp/custom_bashrc >> /etc/skel/.bashrc \
+    && cat /tmp/custom_bashrc >> /root/.bashrc \
+    && rm -f /tmp/custom_bashrc \
+
+# PS1 var when used /bin/sh shell
+ENV PS1="$(tput bold)($(printenv CONTAINER_NAME))$(tput sgr0)[$(id -un)@$(hostname -s) $(pwd)]$ "

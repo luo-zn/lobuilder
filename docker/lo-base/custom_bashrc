@@ -1,0 +1,5 @@
+#### Custom data
+_KBOLD="\[$(tput bold)\]"
+_KRESET="\[$(tput sgr0)\]"
+
+PS1="${_KBOLD}(${CONTAINER_NAME})${_KRESET}[\u@\h \W]\\$ "
