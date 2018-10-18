@@ -22,7 +22,6 @@ import pwd
 import shutil
 import sys
 
-
 # TODO(rhallisey): add docstring.
 logging.basicConfig()
 LOG = logging.getLogger(__name__)
@@ -60,7 +59,6 @@ class ConfigFileBadState(ExitingException):
 
 
 class ConfigFile(object):
-
     def __init__(self, source, dest, owner, perm, optional=False):
         self.source = source
         self.dest = dest
@@ -390,7 +388,7 @@ def execute_config_strategy(config):
             handle_permissions(config)
             os.mknod('/configured')
     else:
-        #Default CONFIG_STRATEG : COPY_ALWAYS
+        # Default CONFIG_STRATEG : COPY_ALWAYS
         copy_config(config)
         handle_permissions(config)
         # raise InvalidConfig('CONTAINER_CONFIG_STRATEGY is not set properly')
