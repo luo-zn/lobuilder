@@ -96,7 +96,7 @@ class ConfigFile(object):
 
     def _copy_file(self, source, dest):
         # dest endswith / means copy the <source> to <dest> folder
-        LOG.info('Coping file from %s to %s', source, dest)
+        LOG.info('Copying file from %s to %s', source, dest)
         shutil.copy(source, dest)
         self._set_permission(dest)
 
