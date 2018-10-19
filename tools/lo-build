@@ -2,7 +2,7 @@
 ENV_PATH=$(pwd)/lobuilderEnv
 if [[ ! -d $ENV_PATH ]];then
     virtualenv lobuilderEnv
-    ${ENV_PATH}/bin/pip install -r
+    ${ENV_PATH}/bin/pip install -r requirements.txt
 fi
-source ${ENV_PATH}/bin/activate -r requirements.txt
+source ${ENV_PATH}/bin/activate
 python lobuilder/cmd/build.py "$@" --config-file etc/lobuilder/lo-build.conf
