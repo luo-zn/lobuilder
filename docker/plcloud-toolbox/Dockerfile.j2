@@ -15,7 +15,7 @@ ENV PYPI_SERVER_PORT 9001
 
 COPY docker-images-local.repo /etc/yum.repos.d/docker-images-local.repo
 COPY extend_start /usr/local/bin/extend_start
-RUN chmod 755 /usr/local/bin/kolla_start \
+RUN chmod 755 /usr/local/bin/extend_start \
     && yum install -y epel-release python2-pip git ansible cronie docker-ce \
     && sed -i "s|^#*\(host_key_checking\s*=.*\)|\1|g" /etc/ansible/ansible.cfg \
     && pip install pymongo  --extra-index-url http://$PYPI_SERVER:$PYPI_SERVER_PORT/ --trusted-host $PYPI_SERVER
