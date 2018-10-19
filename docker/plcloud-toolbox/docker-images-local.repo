@@ -1,0 +1,15 @@
+# Author: ZhenNan.luo(Jenner)
+#
+# This is a custom repo in 192.168.215.53
+
+[docker.images.using.common]
+name=CentOS-$releasever - docker.images.using.common
+baseurl=http://192.168.215.53:9000/yum_repo/docker.images.using/common/
+enabled=1
+gpgcheck=0
+
+[docker.images.using.docker-ce]
+name=CentOS-$releasever - docker.images.using.common
+baseurl=http://192.168.215.53:9000/yum_repo/docker.images.using/docker-ce/
+enabled=1
+gpgcheck=0

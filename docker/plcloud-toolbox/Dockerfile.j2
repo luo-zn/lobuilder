@@ -1,0 +1,21 @@
+{%- if specific_data.base_image%}
+FROM {{ specific_data.base_image }}:{{ specific_data.base_distro_tag }}
+{% else %}
+FROM {{ namespace }}/{{ image_prefix }}lo-base:{{ tag }}
+{% endif -%}
+{%- if specific_data.maintainer %}
+MAINTAINER {{ specific_data.maintainer }}
+{% else %}
+MAINTAINER {{ maintainer }}
+{% endif -%}
+
+
+ENV PYPI_SERVER 192.168.215.53
+ENV PYPI_SERVER_PORT 9001
+
+COPY docker-images-local.repo /etc/yum.repos.d/docker-images-local.repo
+COPY extend_start /usr/local/bin/extend_start
+RUN chmod 755 /usr/local/bin/kolla_start \
+    && yum install -y epel-release python2-pip git ansible cronie docker-ce \
+    && sed -i "s|^#*\(host_key_checking\s*=.*\)|\1|g" /etc/ansible/ansible.cfg \
+    && pip install pymongo  --extra-index-url http://$PYPI_SERVER:$PYPI_SERVER_PORT/ --trusted-host $PYPI_SERVER
