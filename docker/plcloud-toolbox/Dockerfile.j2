@@ -1,4 +1,4 @@
-{%- if specific_data.base_image%}
+{%- if specific_data.base_image %}
 FROM {{ specific_data.base_image }}:{{ specific_data.base_distro_tag }}
 {% else %}
 FROM {{ namespace }}/{{ image_prefix }}lo-base:{{ tag }}
@@ -19,3 +19,7 @@ RUN chmod 755 /usr/local/bin/kolla_start \
     && yum install -y epel-release python2-pip git ansible cronie docker-ce \
     && sed -i "s|^#*\(host_key_checking\s*=.*\)|\1|g" /etc/ansible/ansible.cfg \
     && pip install pymongo  --extra-index-url http://$PYPI_SERVER:$PYPI_SERVER_PORT/ --trusted-host $PYPI_SERVER
+
+{%- if specific_data.uid %}
+user specific_data.uid
+{% endif -%}
