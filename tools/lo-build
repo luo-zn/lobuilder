@@ -1,2 +1,8 @@
 #!/bin/bash
+ENV_PATH=$(pwd)/lobuilderEnv
+if [[ ! -d $ENV_PATH ]];then
+    virtualenv lobuilderEnv
+else
+    source ${ENV_PATH}/bin/activate
+fi
 python lobuilder/cmd/build.py "$@" --config-file etc/lobuilder/lo-build.conf
