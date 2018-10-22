@@ -6,3 +6,15 @@ Lobuilder Overview
 Openstack相关项目进行docker镜像构建。扩展以后，通过在配置文件添加自定义的路径
 (如extend_docker_path=/home/custom-docker-files-dir)，便可以将自定义的dockerfile
 进行容器构建。
+
+===========
+Quick Start
+===========
+
+克隆本项目后，进入项目，执行以下命令生成conf文件
+
+::
+    pip install tox
+    tox -e genconfig
+
+执行后会生成etc/lobuilder/lo-build.conf
