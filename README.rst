@@ -12,15 +12,3 @@ Quick Start
 ===========
 
 进入项目，执行以下命令生成conf文件
-
-::
-
-    pip install tox
-    tox -e genconfig
-
-执行后会生成etc/lobuilder/lo-build.conf.可根据需求编辑lo-build.conf
-
-::
-
-    sh tools/lo-build
-
