@@ -18,4 +18,15 @@ Quick Start
     pip install tox
     tox -e genconfig
 
-执行后会生成etc/lobuilder/lo-build.conf
+执行后会生成etc/lobuilder/lo-build.conf.可根据需求编辑lo-build.conf
+
+::
+
+    sh tools/lo-build
+
+========
+操作文档
+========
+
+- `文档 <https://lobuilder.readthedocs.io/en/latest/admin/index.html>`__
+
