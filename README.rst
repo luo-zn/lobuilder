@@ -11,7 +11,7 @@ Openstack相关项目进行docker镜像构建。扩展以后，通过在配置�
 Quick Start
 ===========
 
-克隆本项目后，进入项目，执行以下命令生成conf文件
+进入项目，执行以下命令生成conf文件
 
 ::
 
@@ -29,4 +29,5 @@ Quick Start
 ========
 
 - `文档 <https://lobuilder.readthedocs.io/en/latest/admin/index.html>`__
+
 
