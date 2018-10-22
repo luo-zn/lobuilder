@@ -29,5 +29,3 @@ Quick Start
 ========
 
 - `文档 <https://lobuilder.readthedocs.io/en/latest/admin/index.html>`__
-
-
